@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Desk — SPX / NDX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10;
+    --panel:#12161d;
+    --panel-2:#161b23;
+    --border:#232a35;
+    --text:#e6e9ee;
+    --text-dim:#7c8698;
+    --text-faint:#4b5566;
+    --bull:#18c88a;
+    --bull-dim:#0f4a3a;
+    --bear:#ef4a5f;
+    --bear-dim:#4a1a24;
+    --amber:#f0b90b;
+    --amber-dim:#4a3d0f;
+    --accent:#4fd1ff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, #0d1a17 0%, transparent 35%),
+      radial-gradient(circle at 85% 10%, #1a0d10 0%, transparent 35%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    padding:20px;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; }
+
+  /* HEADER */
+  header{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:12px;
+    padding-bottom:16px; margin-bottom:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .title-block h1{
+    font-size:22px; font-weight:700; letter-spacing:0.02em;
+  }
+  .title-block .sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; color:var(--text-dim); letter-spacing:0.05em;
+    margin-top:4px; text-transform:uppercase;
+  }
+  .status-pill{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; font-weight:600; letter-spacing:0.06em;
+    padding:6px 12px; border-radius:3px; text-transform:uppercase;
+    display:flex; align-items:center; gap:7px;
+  }
+  .status-pill.closed{ background:var(--amber-dim); color:var(--amber); border:1px solid #6b590f; }
+  .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+  /* TICKER STRIP */
+  .ticker-outer{
+    overflow:hidden; border:1px solid var(--border); border-radius:6px;
+    background:var(--panel); margin-bottom:18px;
+  }
+  .ticker-track{
+    display:flex; gap:0; white-space:nowrap;
+    animation:scroll 38s linear infinite;
+    width:max-content;
+  }
+  .ticker-outer:hover .ticker-track{ animation-play-state:paused; }
+  @keyframes scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  .tick{
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+    padding:12px 22px; border-right:1px solid var(--border);
+    display:flex; align-items:baseline; gap:8px;
+  }
+  .tick .sym{ color:var(--text-dim); font-weight:600; }
+  .tick .val{ color:var(--text); font-weight:600; }
+  .tick .chg.up{ color:var(--bull); }
+  .tick .chg.down{ color:var(--bear); }
+
+  /* GRID */
+  .grid{ display:grid; grid-template-columns:1.1fr 1.4fr; gap:16px; margin-bottom:16px; }
+  @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:18px 20px;
+  }
+  .panel h2{
+    font-size:12px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-dim); margin-bottom:14px; font-weight:600;
+  }
+
+  /* SENTIMENT GAUGE */
+  .gauge-row{ display:flex; align-items:center; gap:18px; margin-bottom:10px; }
+  .gauge-num{ font-family:'JetBrains Mono', monospace; font-size:38px; font-weight:700; }
+  .gauge-num.fear{ color:var(--amber); }
+  .gauge-label{ font-size:13px; color:var(--text-dim); line-height:1.4; }
+  .gauge-label b{ color:var(--amber); }
+  .gauge-bar{
+    position:relative; height:8px; border-radius:4px; margin:14px 0 6px;
+    background:linear-gradient(90deg, var(--bear) 0%, var(--amber) 50%, var(--bull) 100%);
+  }
+  .gauge-needle{
+    position:absolute; top:-5px; width:2px; height:18px; background:#fff;
+    box-shadow:0 0 6px rgba(255,255,255,0.7);
+  }
+  .gauge-scale{ display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-faint); text-transform:uppercase; }
+
+  .bias-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .bias-tag{
+    font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:600;
+    padding:6px 10px; border-radius:4px; text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .bias-tag.bear{ background:var(--bear-dim); color:var(--bear); border:1px solid #6b1f2c; }
+  .bias-tag.bull{ background:var(--bull-dim); color:var(--bull); border:1px solid #196b4f; }
+  .bias-tag.amber{ background:var(--amber-dim); color:var(--amber); border:1px solid #6b590f; }
+
+  .note{ font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-top:14px; }
+
+  /* CATALYSTS */
+  .cat-cols{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  @media (max-width:700px){ .cat-cols{ grid-template-columns:1fr; } }
+  .cat-col h3{
+    font-family:'JetBrains Mono', monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.06em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .cat-col.bull h3{ color:var(--bull); }
+  .cat-col.bear h3{ color:var(--bear); }
+  .cat-col.amber h3{ color:var(--amber); }
+  .cat-item{ font-size:12.5px; line-height:1.5; color:var(--text); margin-bottom:12px; }
+  .cat-item .tag{ display:block; font-size:10.5px; color:var(--text-faint); margin-top:2px; }
+
+  /* MACRO */
+  .macro-item{ display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .macro-item:last-child{ border-bottom:none; }
+  .macro-day{
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent);
+    min-width:64px; padding-top:1px;
+  }
+  .macro-body p{ font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .macro-body b{ color:var(--text); }
+
+  /* NOTES / KEY LEVELS */
+  textarea{
+    width:100%; min-height:130px; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:6px; color:var(--text); font-family:'JetBrains Mono', monospace;
+    font-size:12.5px; padding:12px; resize:vertical; line-height:1.6;
+  }
+  textarea:focus{ outline:1px solid var(--accent); }
+  .save-state{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-faint); margin-top:6px; text-align:right; }
+
+  footer{
+    margin-top:8px; padding-top:14px; border-top:1px solid var(--border);
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--text-faint);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>Trading Desk</h1>
+      <div class="sub">S&amp;P 500 · Nasdaq · Macro / Global</div>
+    </div>
+    <div class="status-pill closed"><span class="dot"></span>Closed Fri Jul 3 — Independence Day</div>
+  </header>
+
+  <div class="ticker-outer">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="grid">
+    <!-- SENTIMENT -->
+    <div class="panel">
+      <h2>Sentiment</h2>
+      <div class="gauge-row">
+        <div class="gauge-num fear">33</div>
+        <div class="gauge-label"><b>Fear</b> — up 2 pts on the day.<br>Range this week: 27–33 (Fear zone throughout).</div>
+      </div>
+      <div class="gauge-bar"><div class="gauge-needle" style="left:33%;"></div></div>
+      <div class="gauge-scale"><span>Extreme Fear</span><span>Neutral</span><span>Extreme Greed</span></div>
+
+      <div class="bias-row">
+        <span class="bias-tag bear">NDX: risk-off</span>
+        <span class="bias-tag amber">SPX: mixed</span>
+        <span class="bias-tag bull">Breadth: Dow leading</span>
+      </div>
+
+      <p class="note">
+        VIX 16.8 (+1.4%) — elevated but not panicked. Divergence is the story: Dow green on rotation into non-tech,
+        while Nasdaq red on a second straight day of chip weakness. That split (defensive breadth up, mega-cap tech down)
+        is a classic late-cycle-rotation signature, not a broad risk-off flush — worth distinguishing from a real trend day.
+      </p>
+    </div>
+
+    <!-- CATALYSTS -->
+    <div class="panel">
+      <h2>Today's Catalysts</h2>
+      <div class="cat-cols">
+        <div class="cat-col bull">
+          <h3>Bullish</h3>
+          <div class="cat-item">June jobs badly missed (+57K vs +113K exp.) — raises odds Fed holds/cuts instead of staying hawkish.
+            <span class="tag">rates</span></div>
+          <div class="cat-item">Gold +1.6% as rate-hike fears ease.
+            <span class="tag">macro</span></div>
+          <div class="cat-item">Rivian raised FY26 delivery guidance; shares +13–15%.
+            <span class="tag">single name</span></div>
+          <div class="cat-item">Palantir upgraded to Buy at D.A. Davidson.
+            <span class="tag">single name</span></div>
+        </div>
+        <div class="cat-col bear">
+          <h3>Bearish</h3>
+          <div class="cat-item">Chip selloff extends 2nd day — Micron, Western Digital, AMD, Intel all lower on AI-capex valuation worries.
+            <span class="tag">semis / NDX</span></div>
+          <div class="cat-item">Alphabet -1.2% pre-market after losing EU antitrust appeal (€4.1B fine).
+            <span class="tag">single name</span></div>
+          <div class="cat-item">Memory-stock ETF (DRAM) tracking for a ~15% weekly drop after a violent June run-up.
+            <span class="tag">semis</span></div>
+        </div>
+        <div class="cat-col amber">
+          <h3>Watch / Neutral</h3>
+          <div class="cat-item">Fed Chair Warsh spoke at ECB's Sintra forum — reaffirmed inflation focus, wants markets reading data over Fed guidance.
+            <span class="tag">macro</span></div>
+          <div class="cat-item">Meta plans to rent out spare AI compute — JPMorgan lukewarm on the pivot.
+            <span class="tag">mega-cap</span></div>
+          <div class="cat-item">Kroger to acquire Giant Eagle for $1.65B.
+            <span class="tag">consumer</span></div>
+          <div class="cat-item">SpaceX initiated Outperform at Wedbush ($190 PT); joins Nasdaq-100 July 7.
+            <span class="tag">index flow</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1.4fr 1.1fr;">
+    <!-- MACRO / GLOBAL -->
+    <div class="panel">
+      <h2>Macro &amp; Global</h2>
+      <div class="macro-item">
+        <div class="macro-day">TODAY</div>
+        <div class="macro-body"><p><b>Jobs report came a day early</b> (holiday week): +57K vs +113K expected, unemployment 4.2% vs 4.3% forecast.
+          Prior months revised lower. Market read: dovish for the Fed, despite the "weak economy" headline risk.</p></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-day">TODAY</div>
+        <div class="macro-body"><p><b>Sintra ECB Forum</b> — Warsh on a panel with Lagarde, Bailey, and Macklem discussing rate paths.
+          Global central bank commentary here can move futures overnight.</p></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-day">FRI 7/3</div>
+        <div class="macro-body"><p>U.S. markets <b>closed</b> for Independence Day. No data releases. Early close Thursday possible on light volume — watch for thin, choppy tape into the close.</p></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-day">JUL</div>
+        <div class="macro-body"><p><b>FOMC meets later this month</b> — currently priced as a hold, but today's soft jobs print nudges cut odds higher for the back half of the year.</p></div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-day">ONGOING</div>
+        <div class="macro-body"><p><b>AI-capex valuation debate</b> is the dominant multi-week theme driving semis — this is the thread to track for NDX 0DTE, more than any single headline.</p></div>
+      </div>
+    </div>
+
+    <!-- KEY LEVELS / NOTES -->
+    <div class="panel">
+      <h2>Session Notes &amp; Key Levels</h2>
+      <textarea id="notes" placeholder="SPX / NDX support &amp; resistance, A+/A setups, FVGs to watch, invalidation levels...&#10;(auto-saves as you type)"></textarea>
+      <div class="save-state" id="saveState">not saved yet</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Snapshot researched Thu Jul 2, 2026 ~12:00 PM ET — prices move fast intraday, treat levels as directional not live.</span>
+    <span>Ask Claude to "refresh the dashboard" next session for a new research pass.</span>
+  </footer>
+
+</div>
+
+<script>
+  // Ticker data — duplicated once for seamless scroll
+  const ticks = [
+    {sym:'SPX', val:'7,442.74', chg:'-0.54%', up:false},
+    {sym:'NDX', val:'25,700.58', chg:'-1.30%', up:false},
+    {sym:'DJI', val:'52,700+', chg:'+0.45%', up:true},
+    {sym:'RUT', val:'2,979.91', chg:'-1.08%', up:false},
+    {sym:'VIX', val:'16.82', chg:'+1.38%', up:true},
+    {sym:'GOLD', val:'4,130.00', chg:'+1.17%', up:true},
+    {sym:'WTI', val:'68.32', chg:'-1.70%', up:false},
+    {sym:'BTC', val:'59,849', chg:'+2.72%', up:true},
+  ];
+  const track = document.getElementById('tickerTrack');
+  function renderTicks(){
+    let html = '';
+    for(let i=0;i<2;i++){
+      ticks.forEach(t=>{
+        html += `<div class="tick"><span class="sym">${t.sym}</span><span class="val">${t.val}</span><span class="chg ${t.up?'up':'down'}">${t.up?'▲':'▼'} ${t.chg}</span></div>`;
+      });
+    }
+    track.innerHTML = html;
+  }
+  renderTicks();
+
+  // Notes persistence
+  const notesEl = document.getElementById('notes');
+  const saveState = document.getElementById('saveState');
+  let saveTimer;
+
+  async function loadNotes(){
+    try{
+      const result = await window.storage.get('trade-desk-notes');
+      if(result && result.value){ notesEl.value = result.value; saveState.textContent = 'loaded'; }
+    }catch(e){ /* no saved notes yet */ }
+  }
+  async function saveNotes(){
+    try{
+      await window.storage.set('trade-desk-notes', notesEl.value);
+      saveState.textContent = 'saved ' + new Date().toLocaleTimeString();
+    }catch(e){
+      saveState.textContent = 'save failed';
+    }
+  }
+  notesEl.addEventListener('input', ()=>{
+    saveState.textContent = 'saving...';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNotes, 700);
+  });
+  loadNotes();
+</script>
+</body>
+</html>
