@@ -1,0 +1,34 @@
+name: Update Dashboard
+
+on:
+  schedule:
+    - cron: '0 13 * * 1-5'   # ~6am PT / 9am ET, weekdays. Adjust to your preference.
+  workflow_dispatch:          # lets you trigger it manually from the Actions tab
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance requests beautifulsoup4
+
+      - name: Run update script
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python update_dashboard.py
+
+      - name: Commit updated dashboard
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Daily dashboard update" || echo "No changes to commit"
+          git push
