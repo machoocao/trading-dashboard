@@ -169,7 +169,7 @@
       <h1>Trading Desk</h1>
       <div class="sub">S&amp;P 500 · Nasdaq · Macro / Global</div>
     </div>
-    <div class="status-pill closed"><span class="dot"></span>Closed Fri Jul 3 — Independence Day</div>
+    <div class="status-pill closed" id="statusPill"><span class="dot"></span>Closed Fri Jul 3 — Independence Day</div>
   </header>
 
   <div class="ticker-outer">
@@ -181,19 +181,19 @@
     <div class="panel">
       <h2>Sentiment</h2>
       <div class="gauge-row">
-        <div class="gauge-num fear">33</div>
-        <div class="gauge-label"><b>Fear</b> — up 2 pts on the day.<br>Range this week: 27–33 (Fear zone throughout).</div>
+        <div class="gauge-num fear" id="fearNum">33</div>
+        <div class="gauge-label" id="gaugeLabel"><b>Fear</b> — up 2 pts on the day.<br>Range this week: 27–33 (Fear zone throughout).</div>
       </div>
-      <div class="gauge-bar"><div class="gauge-needle" style="left:33%;"></div></div>
+      <div class="gauge-bar"><div class="gauge-needle" id="gaugeNeedle" style="left:33%;"></div></div>
       <div class="gauge-scale"><span>Extreme Fear</span><span>Neutral</span><span>Extreme Greed</span></div>
 
-      <div class="bias-row">
+      <div class="bias-row" id="biasRow">
         <span class="bias-tag bear">NDX: risk-off</span>
         <span class="bias-tag amber">SPX: mixed</span>
         <span class="bias-tag bull">Breadth: Dow leading</span>
       </div>
 
-      <p class="note">
+      <p class="note" id="sentimentNote">
         VIX 16.8 (+1.4%) — elevated but not panicked. Divergence is the story: Dow green on rotation into non-tech,
         while Nasdaq red on a second straight day of chip weakness. That split (defensive breadth up, mega-cap tech down)
         is a classic late-cycle-rotation signature, not a broad risk-off flush — worth distinguishing from a real trend day.
@@ -206,6 +206,7 @@
       <div class="cat-cols">
         <div class="cat-col bull">
           <h3>Bullish</h3>
+          <div id="bullList">
           <div class="cat-item">June jobs badly missed (+57K vs +113K exp.) — raises odds Fed holds/cuts instead of staying hawkish.
             <span class="tag">rates</span></div>
           <div class="cat-item">Gold +1.6% as rate-hike fears ease.
@@ -214,18 +215,22 @@
             <span class="tag">single name</span></div>
           <div class="cat-item">Palantir upgraded to Buy at D.A. Davidson.
             <span class="tag">single name</span></div>
+          </div>
         </div>
         <div class="cat-col bear">
           <h3>Bearish</h3>
+          <div id="bearList">
           <div class="cat-item">Chip selloff extends 2nd day — Micron, Western Digital, AMD, Intel all lower on AI-capex valuation worries.
             <span class="tag">semis / NDX</span></div>
           <div class="cat-item">Alphabet -1.2% pre-market after losing EU antitrust appeal (€4.1B fine).
             <span class="tag">single name</span></div>
           <div class="cat-item">Memory-stock ETF (DRAM) tracking for a ~15% weekly drop after a violent June run-up.
             <span class="tag">semis</span></div>
+          </div>
         </div>
         <div class="cat-col amber">
           <h3>Watch / Neutral</h3>
+          <div id="amberList">
           <div class="cat-item">Fed Chair Warsh spoke at ECB's Sintra forum — reaffirmed inflation focus, wants markets reading data over Fed guidance.
             <span class="tag">macro</span></div>
           <div class="cat-item">Meta plans to rent out spare AI compute — JPMorgan lukewarm on the pivot.
@@ -234,6 +239,7 @@
             <span class="tag">consumer</span></div>
           <div class="cat-item">SpaceX initiated Outperform at Wedbush ($190 PT); joins Nasdaq-100 July 7.
             <span class="tag">index flow</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,6 +249,7 @@
     <!-- MACRO / GLOBAL -->
     <div class="panel">
       <h2>Macro &amp; Global</h2>
+      <div id="macroList">
       <div class="macro-item">
         <div class="macro-day">TODAY</div>
         <div class="macro-body"><p><b>Jobs report came a day early</b> (holiday week): +57K vs +113K expected, unemployment 4.2% vs 4.3% forecast.
@@ -265,6 +272,7 @@
         <div class="macro-day">ONGOING</div>
         <div class="macro-body"><p><b>AI-capex valuation debate</b> is the dominant multi-week theme driving semis — this is the thread to track for NDX 0DTE, more than any single headline.</p></div>
       </div>
+      </div>
     </div>
 
     <!-- KEY LEVELS / NOTES -->
@@ -276,7 +284,7 @@
   </div>
 
   <footer>
-    <span>Snapshot researched Thu Jul 2, 2026 ~12:00 PM ET — prices move fast intraday, treat levels as directional not live.</span>
+    <span id="footerSnapshot">Snapshot researched Thu Jul 2, 2026 ~12:00 PM ET — prices move fast intraday, treat levels as directional not live.</span>
     <span>Ask Claude to "refresh the dashboard" next session for a new research pass.</span>
   </footer>
 
@@ -284,6 +292,7 @@
 
 <script>
   // Ticker data — duplicated once for seamless scroll
+  // TICKS_START (do not edit this line — script replaces the array below)
   const ticks = [
     {sym:'SPX', val:'7,442.74', chg:'-0.54%', up:false},
     {sym:'NDX', val:'25,700.58', chg:'-1.30%', up:false},
@@ -294,6 +303,7 @@
     {sym:'WTI', val:'68.32', chg:'-1.70%', up:false},
     {sym:'BTC', val:'59,849', chg:'+2.72%', up:true},
   ];
+  // TICKS_END (do not edit this line)
   const track = document.getElementById('tickerTrack');
   function renderTicks(){
     let html = '';
